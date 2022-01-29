@@ -7,3 +7,7 @@ purge-branches:
 
 typecheck:
 	mypy concordat/interface.py
+
+lint:
+	black .
+	pylint concordat/interface.py

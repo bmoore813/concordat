@@ -119,23 +119,17 @@ class TestInheritanceErrors:
                     print(f"{sheesh} and {id}")
 
 
-
-
 class IStatic(metaclass=InterfaceMeta):
-
-    
     @abstract_method
     def poop(path: str, id: int) -> None:
         ...
 
-    
     @abstract_method
     def pee(path: str) -> None:
         ...
 
 
 class Static(IStatic):
-
     @staticmethod
     def poop(path: str, id: int) -> None:
         print(f"{path} and {id}")
@@ -153,7 +147,6 @@ class TestBuildErrors:
         with pytest.raises(NotImplementedError):
 
             class MissingMethod(IStatic):
-
                 @staticmethod
                 def poop(path: str, id: int) -> None:
                     print(f"path is {path}")
@@ -193,7 +186,7 @@ class TestBuildErrors:
 
             class BadTypeHints(IStatic):
                 def poop(path: Dict, id: str) -> Tuple:
-                    return f"{path} and {id}" 
+                    return f"{path} and {id}"
 
                 def pee(path: int) -> str:
                     return f"path is {path}"
