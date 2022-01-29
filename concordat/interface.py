@@ -2,7 +2,8 @@
 Custom ABC Implementation so we can enforce types at
 runtime and on signatures
 """
-from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, get_type_hints
 
 from pydantic import validate_arguments  # type: ignore
 
@@ -10,6 +11,51 @@ MRO_JUMP = 2
 ALL_METHODS = "all_methods"
 ABSTRACT_METHODS = "abstract_methods"
 IS_ABSTRACT = "__isabstract__"
+NONE_TYPE = type(None) #pylint: disable=invalid-name
+
+
+def return_type_wrapper(fnc: Callable) -> Any:
+    """Layer for checking the return type at runtime
+
+    Args:
+        fnc ([Callable]): function to be examined
+
+    Raises:
+        TypeError: "Didn't provide a return type you little rascal. Now start over"
+        TypeError: f"We got result type:{type(result)} and return_type:{return_type}"
+
+    Returns:
+        [type]: whatever the function author returns
+    """
+
+    @wraps(fnc)
+    def wrapping(*args, **kwargs) -> Any:  # type: ignore
+        """[summary]
+
+        Raises:
+            TypeError: "Didn't provide a return type you little rascal. Now start over"
+            TypeError: f"We got result type:{type(result)} and return_type:{return_type}"
+
+        Returns:
+            Callable: wrapped function
+        """
+        return_type: Optional[Any] = None
+        try:
+            return_type = get_type_hints(fnc)["return"]
+        except KeyError:
+            raise TypeError(
+                "Didn't provide a return type you little rascal. Now start over"
+            ) from KeyError
+        result = fnc(*args, **kwargs)
+
+        if result and NONE_TYPE != type(return_type):
+            if not isinstance(result, return_type):
+                raise TypeError(
+                    f"We got result type:{type(result)} and return_type:{return_type}"
+                )
+        return result
+
+    return wrapping
 
 
 def abstract_method(func: Callable) -> Callable:
@@ -129,20 +175,25 @@ class InterfaceMeta(type):
         namespace[ABSTRACT_METHODS] = InterfaceMeta._get_abstract_methods(namespace)
         namespace[ALL_METHODS] = InterfaceMeta._get_all_methods(namespace)
         for attribute_name, attribute in namespace.items():
-            if isinstance(attribute, Callable):
-                attribute = validate_arguments(
-                    func=attribute, config=dict(arbitrary_types_allowed=True)
+            if isinstance(attribute, Callable):  # type: ignore
+                attribute = return_type_wrapper(
+                    validate_arguments(
+                        func=attribute, config=dict(arbitrary_types_allowed=True)
+                    )
                 )
             if isinstance(attribute, staticmethod):
                 # Here we decouple the static method from the function
                 # and wedge the validate_arguments between the staticmethod
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
-                    validate_arguments(
-                        func=attribute.__func__,
-                        config=dict(arbitrary_types_allowed=True),
+                    return_type_wrapper(
+                        validate_arguments(
+                            func=attribute.__func__,
+                            config=dict(arbitrary_types_allowed=True),
+                        )
                     )
                 )
+                # attribute = staticmethod(type_enforcer(attribute.__func__))
             namespace[attribute_name] = attribute
         cls = super().__new__(  # pylint: disable=self-cls-assignment
             cls, name, bases, namespace
