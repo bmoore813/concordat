@@ -5,7 +5,7 @@ runtime and on signatures
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, get_type_hints
 
-from pydantic import validate_arguments  
+from pydantic import validate_arguments
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -99,7 +99,7 @@ class InterfaceMeta(type):
 
     def __init__(  # pylint: disable=unused-argument,super-init-not-called)
         cls, name: str, bases: Tuple, namespace: Dict
-    ) -> None:  # pylint: disable=trailing-whitespace
+    ) -> None:
         """Here we validate the implementations that were defined in our interface.
             Further, we also wrap every method automagically with pydantics validate_arguments
             to ensure even at runtime this code is executed as promised.
@@ -127,7 +127,7 @@ class InterfaceMeta(type):
 
             class_methods = (
                 cls._get_class_methods()  # pylint: disable=no-value-for-parameter
-            )  # pylint: disable=trailing-whitespace
+            )
 
             for method in must_implement:
                 if method not in class_methods:
@@ -187,7 +187,7 @@ class InterfaceMeta(type):
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
                     return_type_wrapper(
-                        validate_arguments( #type: ignore[call-overload]
+                        validate_arguments(  # type: ignore[call-overload]
                             func=attribute.__func__,
                             config=dict(arbitrary_types_allowed=True),
                         )
