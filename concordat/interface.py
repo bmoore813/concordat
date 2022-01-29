@@ -5,7 +5,7 @@ runtime and on signatures
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, get_type_hints
 
-from pydantic import validate_arguments  # type: ignore
+from pydantic import validate_arguments  
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -187,7 +187,7 @@ class InterfaceMeta(type):
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
                     return_type_wrapper(
-                        validate_arguments(
+                        validate_arguments( #type: ignore[call-overload]
                             func=attribute.__func__,
                             config=dict(arbitrary_types_allowed=True),
                         )
