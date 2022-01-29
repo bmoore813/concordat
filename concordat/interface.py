@@ -1,8 +1,15 @@
+"""
+Custom ABC Implementation so we can enforce types at
+runtime and on signatures
+"""
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
 
-from pydantic import validate_arguments # type: ignore
+from pydantic import validate_arguments  # type: ignore
 
 MRO_JUMP = 2
+ALL_METHODS = "all_methods"
+ABSTRACT_METHODS = "abstract_methods"
+IS_ABSTRACT = "__isabstract__"
 
 
 def abstract_method(func: Callable) -> Callable:
@@ -29,7 +36,7 @@ def abstract_method(func: Callable) -> Callable:
     Returns:
         Callable: The original fuction is returned with __isabstract__ = True
     """
-    setattr(func, "__isabstract__", True)
+    setattr(func, IS_ABSTRACT, True)
     return func
 
 
@@ -44,7 +51,9 @@ class InterfaceMeta(type):
         type ([type]): The most primitive of types in python
     """
 
-    def __init__(self, name: str, bases: Tuple, namespace: Dict) -> None:
+    def __init__(  # pylint: disable=unused-argument,super-init-not-called)
+        cls, name: str, bases: Tuple, namespace: Dict
+    ) -> None:  # pylint: disable=trailing-whitespace
         """Here we validate the implementations that were defined in our interface.
             Further, we also wrap every method automagically with pydantics validate_arguments
             to ensure even at runtime this code is executed as promised.
@@ -65,49 +74,51 @@ class InterfaceMeta(type):
                        is of inappropriate type to the Interfaces type.
         """
 
-        if len(self.mro()) > MRO_JUMP:
-            interface_base = self.mro()[-MRO_JUMP]
+        if len(cls.mro()) > MRO_JUMP:
+            interface_base = cls.mro()[-MRO_JUMP]
 
-            must_implement = getattr(interface_base, "abstract_methods", [])
+            must_implement = getattr(interface_base, ABSTRACT_METHODS, [])
 
-            class_methods = self._get_class_methods()
+            class_methods = (
+                cls._get_class_methods()  # pylint: disable=no-value-for-parameter
+            )  # pylint: disable=trailing-whitespace
 
             for method in must_implement:
                 if method not in class_methods:
                     raise NotImplementedError(
                         f"""Can't create abstract class {name}!
-                    {name} must implement abstract method {method} of class {interface_base.__name__}!"""
+                    {name} must implement abstract method {method}
+                    of class {interface_base.__name__}!"""
                     )
-
-                else:
-                    interface_definition: Dict[str, str] = get_type_hints(
-                        getattr(interface_base, method)
-                    )
-                    instance_definition: Dict[str, str] = get_type_hints(
-                        getattr(self, method)
-                    )
-                    if instance_definition != interface_definition:
-                        raise TypeError(
-                            f"Instance `{self.__name__}` inherits from Interface `{interface_base.__name__}`.\n "
-                            + f"The method `{method}` doesn't match. We expect:\n"
-                            + "\n,".join(
-                                [
-                                    f"parameter->{parameter} and type hint->{t}"
-                                    for parameter, t in tuple(
-                                        set(interface_definition.items())
-                                        - set(instance_definition.items())
-                                    )
-                                ]
-                            )
+                interface_definition: Dict[str, str] = get_type_hints(
+                    getattr(interface_base, method)
+                )
+                instance_definition: Dict[str, str] = get_type_hints(
+                    getattr(cls, method)
+                )
+                if instance_definition != interface_definition:
+                    raise TypeError(
+                        f"Instance `{cls.__name__}` inherits from"
+                        + f" Interface `{interface_base.__name__}`.\n "
+                        + f"The method `{method}` doesn't match. We expect:\n"
+                        + "\n,".join(
+                            [
+                                f"parameter->{parameter} and type hint->{t}"
+                                for parameter, t in tuple(
+                                    set(interface_definition.items())
+                                    - set(instance_definition.items())
+                                )
+                            ]
                         )
+                    )
 
-    def __new__(metaclass: Type, name: str, bases: Tuple, namespace: Dict) -> Any:
-        """ Since __new__ is called whenever calling on said class name we can reliably
+    def __new__(cls: Type, name: str, bases: Tuple, namespace: Dict) -> Any:
+        """Since __new__ is called whenever calling on said class name we can reliably
             always set some base attributes for our interface to later reference when
             we instantiate the object.
 
         Args:
-            metaclass (Type): The most primitive of all python types
+            cls (Type): The most primitive of all python types
             name (str): The name of the class
             bases (Tuple): All inherited classes
             namespace (Dict): All objects associated with this class
@@ -115,24 +126,27 @@ class InterfaceMeta(type):
         Returns:
             Any: The instance of our class that has been created
         """
-        namespace["abstract_methods"] = InterfaceMeta._get_abstract_methods(namespace)
-        namespace["all_methods"] = InterfaceMeta._get_all_methods(namespace)
-        
-        for attributeName, attribute in namespace.items():
-            if isinstance(attribute, Callable): # type: ignore
-                
+        namespace[ABSTRACT_METHODS] = InterfaceMeta._get_abstract_methods(namespace)
+        namespace[ALL_METHODS] = InterfaceMeta._get_all_methods(namespace)
+        for attribute_name, attribute in namespace.items():
+            if isinstance(attribute, Callable):
                 attribute = validate_arguments(
                     func=attribute, config=dict(arbitrary_types_allowed=True)
                 )
-            if isinstance(attribute,staticmethod):
+            if isinstance(attribute, staticmethod):
                 # Here we decouple the static method from the function
                 # and wedge the validate_arguments between the staticmethod
                 # wrapper and go on our merry way baby
-                attribute = staticmethod(validate_arguments(
-                    func=attribute.__func__, config=dict(arbitrary_types_allowed=True)
-                ))
-            namespace[attributeName] = attribute
-        cls = super().__new__(metaclass, name, bases, namespace)
+                attribute = staticmethod(
+                    validate_arguments(
+                        func=attribute.__func__,
+                        config=dict(arbitrary_types_allowed=True),
+                    )
+                )
+            namespace[attribute_name] = attribute
+        cls = super().__new__(  # pylint: disable=self-cls-assignment
+            cls, name, bases, namespace
+        )  # pylint: disable=trailing-whitespace
         return cls
 
     @staticmethod
@@ -150,7 +164,7 @@ class InterfaceMeta(type):
         return [
             name
             for name, val in namespace.items()
-            if callable(val) and getattr(val, "__isabstract__", False)
+            if callable(val) and getattr(val, IS_ABSTRACT, False)
         ]
 
     @staticmethod
@@ -164,9 +178,13 @@ class InterfaceMeta(type):
         Returns:
             List[Callable]: A list of all methods on the current instance of the class
         """
-        return [name for name, val in namespace.items() if callable(val) or isinstance(val,staticmethod)]
+        return [
+            name
+            for name, val in namespace.items()
+            if callable(val) or isinstance(val, staticmethod)
+        ]
 
-    def _get_class_methods(self) -> Set:
+    def _get_class_methods(cls) -> Set:
         """Gets all unique methods from the current class.
            This excludes the Interface methods, but includes all inherited methods,
            including nested inheritance.
@@ -174,4 +192,6 @@ class InterfaceMeta(type):
         Returns:
             Set: All class methods
         """
-        return {i for cls in self.mro()[:-MRO_JUMP] for i in getattr(cls, "all_methods", [])}
+        return {
+            i for cls in cls.mro()[:-MRO_JUMP] for i in getattr(cls, ALL_METHODS, [])
+        }
