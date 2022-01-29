@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
 
-from pydantic import validate_arguments
+from pydantic import validate_arguments # type: ignore
 
 MRO_JUMP = 2
 
@@ -119,7 +119,7 @@ class InterfaceMeta(type):
         namespace["all_methods"] = InterfaceMeta._get_all_methods(namespace)
         
         for attributeName, attribute in namespace.items():
-            if isinstance(attribute, Callable):
+            if isinstance(attribute, Callable): # type: ignore
                 
                 attribute = validate_arguments(
                     func=attribute, config=dict(arbitrary_types_allowed=True)
