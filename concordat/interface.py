@@ -2,6 +2,8 @@ from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
 
 from pydantic import validate_arguments
 
+MRO_JUMP = 2
+
 
 def abstract_method(func: Callable) -> Callable:
     """A decorator indicating abstract methods.
@@ -63,8 +65,8 @@ class InterfaceMeta(type):
                        is of inappropriate type to the Interfaces type.
         """
 
-        if len(self.mro()) > 2:
-            interface_base = self.mro()[-2]
+        if len(self.mro()) > MRO_JUMP:
+            interface_base = self.mro()[-MRO_JUMP]
 
             must_implement = getattr(interface_base, "abstract_methods", [])
 
@@ -115,11 +117,20 @@ class InterfaceMeta(type):
         """
         namespace["abstract_methods"] = InterfaceMeta._get_abstract_methods(namespace)
         namespace["all_methods"] = InterfaceMeta._get_all_methods(namespace)
+        
         for attributeName, attribute in namespace.items():
-            if isinstance(attribute, Callable):  # type:ignore
+            if isinstance(attribute, Callable):
+                
                 attribute = validate_arguments(
                     func=attribute, config=dict(arbitrary_types_allowed=True)
                 )
+            if isinstance(attribute,staticmethod):
+                # Here we decouple the static method from the function
+                # and wedge the validate_arguments between the staticmethod
+                # wrapper and go on our merry way baby
+                attribute = staticmethod(validate_arguments(
+                    func=attribute.__func__, config=dict(arbitrary_types_allowed=True)
+                ))
             namespace[attributeName] = attribute
         cls = super().__new__(metaclass, name, bases, namespace)
         return cls
@@ -153,7 +164,7 @@ class InterfaceMeta(type):
         Returns:
             List[Callable]: A list of all methods on the current instance of the class
         """
-        return [name for name, val in namespace.items() if callable(val)]
+        return [name for name, val in namespace.items() if callable(val) or isinstance(val,staticmethod)]
 
     def _get_class_methods(self) -> Set:
         """Gets all unique methods from the current class.
@@ -163,4 +174,4 @@ class InterfaceMeta(type):
         Returns:
             Set: All class methods
         """
-        return {i for cls in self.mro()[:-2] for i in getattr(cls, "all_methods", [])}
+        return {i for cls in self.mro()[:-MRO_JUMP] for i in getattr(cls, "all_methods", [])}
