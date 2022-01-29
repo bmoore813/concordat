@@ -11,7 +11,7 @@ MRO_JUMP = 2
 ALL_METHODS = "all_methods"
 ABSTRACT_METHODS = "abstract_methods"
 IS_ABSTRACT = "__isabstract__"
-NONE_TYPE = type(None) #pylint: disable=invalid-name
+NONE_TYPE = type(None)  # pylint: disable=invalid-name
 
 
 def return_type_wrapper(fnc: Callable) -> Any:
