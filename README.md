@@ -14,3 +14,5 @@ make tests
 ```
 
 - refer to [interface_test.py](./concordat/interface_test.py) for sample usages
+
+updated readme.md
