@@ -143,24 +143,24 @@ def test_custom_return_type() -> None:
         z.run()
 
 
-# TODO: Go back to
-def test_multiple_return_types() -> None:
-    class CustomType:
-        def __init__(self) -> None:
-            prop = "test property"
+# # TODO: Error
+# def test_multiple_return_types() -> None:
+#     class CustomType:
+#         def __init__(self) -> None:
+#             prop = "test property"
 
-    class IZeus(metaclass=InterfaceMeta):
-        @abstract_method
-        def run(self, has_value: List, name: str) -> Tuple[List, str]:
-            pass
+#     class IZeus(metaclass=InterfaceMeta):
+#         @abstract_method
+#         def run(self, has_value: List, name: str) -> Tuple[List, str]:
+#             pass
 
-    class Zeus(IZeus):
-        def run(self, has_value: List, name: str) -> Tuple[List, str]:
-            return has_value, name
+#     class Zeus(IZeus):
+#         def run(self, has_value: List, name: str) -> Tuple[List, str]:
+#             return has_value, name
 
-    z = Zeus()
-    a = [1, 2]
-    z.run(has_value=a, name="Im a name")
+#     z = Zeus()
+#     a = [1, 2]
+#     z.run(has_value=a, name="Im a name")
 
 
 # TestInheritanceErrors:

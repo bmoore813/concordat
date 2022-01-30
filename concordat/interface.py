@@ -48,7 +48,7 @@ def return_type_wrapper(fnc: Callable) -> Any:
         TypeError: f"We got result type:{type(result)} and return_type:{return_type}"
 
     Returns:
-        [type]: whatever the function author returns
+        [type]: whatever the type the function author returns
     """
 
     @wraps(fnc)
@@ -72,18 +72,28 @@ def return_type_wrapper(fnc: Callable) -> Any:
             ) from KeyError
         result = fnc(*args, **kwargs)
 
-        if result and NONE_TYPE != type(return_annotation):
 
+
+        if any([result is not None, NONE_TYPE != type(return_annotation)]):
+            
             if not return_annotation:
-                annotation = Any
+                if NONE_TYPE != type(return_annotation):
+                    annotation = None
+                else:
+                    annotation = Any
             else:
-                annotation = type_hints[RETURN]
+                val = type_hints[RETURN]
+                annotation = val() if isinstance(Callable, val) else val()
             fields: Dict[str, Tuple[Any, Any]] = {}
-            fields[RETURN] = annotation, None
+            fields[RETURN] = annotation
+            # import pdb
+            # pdb.set_trace()
 
-            model = create_model(
-                "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
-            )
+            # model = create_model(
+            #     "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
+            # )
+            model = create_model("ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields)
+
             model.parse_obj({RETURN: result})
 
         return result
