@@ -81,7 +81,7 @@ def return_type_wrapper(fnc: Callable) -> Any:
             fields["return"] = annotation, None
 
             model = create_model(
-                "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields
+                "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
             )
             model.parse_obj({"return": result})
 
@@ -219,7 +219,7 @@ class InterfaceMeta(type):
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
                     return_type_wrapper(
-                        validate_arguments(
+                        validate_arguments(  # type: ignore
                             func=attribute.__func__,
                             config=dict(arbitrary_types_allowed=True),
                         )
