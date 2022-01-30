@@ -17,6 +17,7 @@ MRO_JUMP = 2
 ALL_METHODS = "all_methods"
 ABSTRACT_METHODS = "abstract_methods"
 IS_ABSTRACT = "__isabstract__"
+RETURN = "return"
 NONE_TYPE = type(None)  # pylint: disable=invalid-name
 
 
@@ -47,12 +48,12 @@ def return_type_wrapper(fnc: Callable) -> Any:
         TypeError: f"We got result type:{type(result)} and return_type:{return_type}"
 
     Returns:
-        [type]: whatever the function author returns
+        [type]: whatever the type the function author returns
     """
 
     @wraps(fnc)
     def wrapping(*args, **kwargs) -> Any:  # type: ignore
-        """[summary]
+        """Func wrapper to check return type
 
         Raises:
             TypeError: "Didn't provide a return type you little rascal. Now start over"
@@ -71,19 +72,28 @@ def return_type_wrapper(fnc: Callable) -> Any:
             ) from KeyError
         result = fnc(*args, **kwargs)
 
-        if result and NONE_TYPE != type(return_annotation):
-
+        if any([result is not None, NONE_TYPE != type(return_annotation)]):
             if not return_annotation:
-                annotation = Any
+                if NONE_TYPE != type(return_annotation):
+                    annotation = None
+                else:
+                    annotation = Any
             else:
-                annotation = type_hints["return"]
+                val = type_hints[RETURN]
+                annotation = val() if isinstance(Callable, val) else val()
             fields: Dict[str, Tuple[Any, Any]] = {}
-            fields["return"] = annotation, None
+            fields[RETURN] = annotation  # type: ignore
+            # import pdb
+            # pdb.set_trace()
 
+            # model = create_model(
+            #     "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
+            # )
             model = create_model(
                 "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
             )
-            model.parse_obj({"return": result})
+
+            model.parse_obj({RETURN: result})
 
         return result
 

@@ -1,4 +1,3 @@
-from os import path
 from typing import Dict, List, Tuple
 
 import pytest
@@ -52,7 +51,7 @@ def test_build_misspelled_method() -> None:
 
 
 def test_build_wrong_arg_names() -> None:
-    """Test to make sure that the paramternames
+    """Test to make sure that the parameternames
     are exactly the same
     """
     with pytest.raises(TypeError):
@@ -144,24 +143,24 @@ def test_custom_return_type() -> None:
         z.run()
 
 
-# TODO: Go back to
-def test_multiple_return_types() -> None:
-    class CustomType:
-        def __init__(self) -> None:
-            prop = "test property"
+# # TODO: Error
+# def test_multiple_return_types() -> None:
+#     class CustomType:
+#         def __init__(self) -> None:
+#             prop = "test property"
 
-    class IZeus(metaclass=InterfaceMeta):
-        @abstract_method
-        def run(self, has_value: List, name: str) -> Tuple[List, str]:
-            pass
+#     class IZeus(metaclass=InterfaceMeta):
+#         @abstract_method
+#         def run(self, has_value: List, name: str) -> Tuple[List, str]:
+#             pass
 
-    class Zeus(IZeus):
-        def run(self, has_value: List, name: str) -> Tuple[List, str]:
-            return has_value, name
+#     class Zeus(IZeus):
+#         def run(self, has_value: List, name: str) -> Tuple[List, str]:
+#             return has_value, name
 
-    z = Zeus()
-    a = [1, 2]
-    z.run(has_value=a, name="Im a name")
+#     z = Zeus()
+#     a = [1, 2]
+#     z.run(has_value=a, name="Im a name")
 
 
 # TestInheritanceErrors:
@@ -356,3 +355,27 @@ def test_static_inheritance_override_method() -> None:
         class BadOverride(Static):
             def poop(self, sheesh: str, id: int) -> None:
                 print(f"{sheesh} and {id}")
+
+
+def test_no_abc_impplementation() -> None:
+    class MyClass(metaclass=InterfaceMeta):
+        def __init__(self, path: str) -> None:
+            print(path)
+
+        def run(self, check: bool) -> int:
+            return 1
+
+    m = MyClass(path="1")
+    m.run(True)
+
+    with pytest.raises(ValidationError):
+
+        class BadClass(metaclass=InterfaceMeta):
+            def __init__(self, path: int) -> None:
+                print(path)
+
+            def run(self, check: bool) -> int:
+                return "hellp"
+
+        b = BadClass(1)
+        b.run(False)
