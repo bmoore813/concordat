@@ -3,15 +3,37 @@ Custom ABC Implementation so we can enforce types at
 runtime and on signatures
 """
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, get_type_hints
+from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
+from inspect import signature
 
-from pydantic import validate_arguments
+from pydantic import (  # type: ignore  # pylint: disable=no-name-in-module
+    BaseModel,
+    create_model,
+    validate_arguments,
+)
+from pydantic.typing import get_all_type_hints  # type: ignore  # pylint: disable=no-name-in-module
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
 ABSTRACT_METHODS = "abstract_methods"
 IS_ABSTRACT = "__isabstract__"
 NONE_TYPE = type(None)  # pylint: disable=invalid-name
+
+
+class ReturnValue(BaseModel):  # type: ignore # pylint: disable=too-few-public-methods
+    """Base class for validating the return
+        type annoation in real time
+
+    Args:
+        BaseModel ([type]): [description]
+    """
+
+    class Config:  # pylint: disable=too-few-public-methods
+        """Additional config to allow for
+        custom classes when validating
+        """
+
+        arbitrary_types_allowed = True
 
 
 def return_type_wrapper(fnc: Callable) -> Any:
@@ -39,20 +61,30 @@ def return_type_wrapper(fnc: Callable) -> Any:
         Returns:
             Callable: wrapped function
         """
-        return_type: Optional[Any] = None
+
+        return_annotation = signature(fnc).return_annotation
         try:
-            return_type = get_type_hints(fnc)["return"]
+            type_hints = get_all_type_hints(fnc)
         except KeyError:
             raise TypeError(
                 "Didn't provide a return type you little rascal. Now start over"
             ) from KeyError
         result = fnc(*args, **kwargs)
 
-        if result and NONE_TYPE != type(return_type):
-            if not isinstance(result, return_type):
-                raise TypeError(
-                    f"We got result type:{type(result)} and return_type:{return_type}"
-                )
+        if result and NONE_TYPE != type(return_annotation):
+
+            if not return_annotation:
+                annotation = Any
+            else:
+                annotation = type_hints["return"]
+            fields: Dict[str, Tuple[Any, Any]] = {}
+            fields["return"] = annotation, None
+
+            model = create_model(
+                "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
+            )
+            model.parse_obj({"return": result})
+
         return result
 
     return wrapping
@@ -187,7 +219,7 @@ class InterfaceMeta(type):
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
                     return_type_wrapper(
-                        validate_arguments(  # type: ignore[call-overload]
+                        validate_arguments(  # type: ignore
                             func=attribute.__func__,
                             config=dict(arbitrary_types_allowed=True),
                         )

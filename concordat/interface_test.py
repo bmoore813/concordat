@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import pytest
 from pydantic import ValidationError
@@ -24,7 +24,7 @@ class Valid(IValid):
         print(f"path is {path}")
 
 
-# TestBuildErrors:
+# # TestBuildErrors:
 def test_build_missing_method() -> None:
     """Test to see if a method is missing on the
     implementation class
@@ -79,7 +79,7 @@ def test_build_wrong_type_hints() -> None:
                 return f"path is {path}"
 
 
-# TestRuntimeErrors:
+# # TestRuntimeErrors:
 def test_run_wrong_arg_types() -> None:
     with pytest.raises(ValidationError):
         v = Valid()
@@ -93,7 +93,7 @@ def test_no_errors() -> None:
 
 
 def test_bad_return_type() -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
 
         class IZeus(metaclass=InterfaceMeta):
             @abstract_method
@@ -115,6 +115,52 @@ def test_bad_return_type() -> None:
         z = Zeus()
         z.run("test/path", 1)
         z.read("hello")
+
+
+def test_custom_return_type() -> None:
+    class CustomType:
+        def __init__(self) -> None:
+            prop = "test property"
+
+    class IZeus(metaclass=InterfaceMeta):
+        @abstract_method
+        def run(self) -> CustomType:
+            pass
+
+    class Zeus(IZeus):
+        def run(self) -> CustomType:
+            return CustomType()
+
+    z = Zeus()
+    z.run()
+    with pytest.raises(ValidationError):
+
+        class Zeus(IZeus):
+            def run(self) -> CustomType:
+                return 1
+
+        z = Zeus()
+        z.run()
+
+
+# TODO: Go back to
+def test_multiple_return_types() -> None:
+    class CustomType:
+        def __init__(self) -> None:
+            prop = "test property"
+
+    class IZeus(metaclass=InterfaceMeta):
+        @abstract_method
+        def run(self, has_value: List, name: str) -> Tuple[List, str]:
+            pass
+
+    class Zeus(IZeus):
+        def run(self, has_value: List, name: str) -> Tuple[List, str]:
+            return has_value, name
+
+    z = Zeus()
+    a = [1, 2]
+    z.run(has_value=a, name="Im a name")
 
 
 # TestInheritanceErrors:
@@ -246,7 +292,7 @@ def test_static_no_errors() -> None:
 
 
 def test_bad_return_type() -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
 
         class IZeus(metaclass=InterfaceMeta):
             @abstract_method
