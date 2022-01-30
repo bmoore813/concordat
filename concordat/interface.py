@@ -6,12 +6,12 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
 from inspect import signature
 
-from pydantic import (  # pylint: disable=no-name-in-module
+from pydantic import (  # type: ignore  # pylint: disable=no-name-in-module
     BaseModel,
     create_model,
     validate_arguments,
 )
-from pydantic.typing import get_all_type_hints  # pylint: disable=no-name-in-module
+from pydantic.typing import get_all_type_hints  # type: ignore  # pylint: disable=no-name-in-module
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -20,7 +20,7 @@ IS_ABSTRACT = "__isabstract__"
 NONE_TYPE = type(None)  # pylint: disable=invalid-name
 
 
-class ReturnValue(BaseModel):  # pylint: disable=too-few-public-methods
+class ReturnValue(BaseModel):  # type: ignore # pylint: disable=too-few-public-methods
     """Base class for validating the return
         type annoation in real time
 
@@ -219,7 +219,7 @@ class InterfaceMeta(type):
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
                     return_type_wrapper(
-                        validate_arguments(  # type: ignore[call-overload]
+                        validate_arguments(
                             func=attribute.__func__,
                             config=dict(arbitrary_types_allowed=True),
                         )
