@@ -6,7 +6,6 @@ from pydantic import ValidationError
 from concordat.interface import InterfaceMeta, abstract_method
 
 
-
 # class IValid(metaclass=InterfaceMeta):
 #     @abstract_method
 #     def run(self, path: str, id: int) -> None:
@@ -15,7 +14,6 @@ from concordat.interface import InterfaceMeta, abstract_method
 #     @abstract_method
 #     def read(self, path: str) -> None:
 #         pass
-
 
 
 # class Valid(IValid):
@@ -36,8 +34,6 @@ class BadReturnType(IBadReturnType):
     def run(self, path: str, id: int) -> None:
         print(f"{path} and {id}")
         return "I should be None"
-
-
 
 
 # # Build Errors
@@ -64,7 +60,7 @@ class BadReturnType(IBadReturnType):
 
 #             def read(self, path: str) -> None:
 #                 print(f"path is {path}")
-    
+
 #     # 3
 #     with pytest.raises(TypeError):
 #         class BadNames(IValid):
@@ -85,18 +81,26 @@ class BadReturnType(IBadReturnType):
 #                 return f"path is {path}"
 
 
-
-
-
 @pytest.mark.parametrize(
     "name,test_class,expected_error,kwargs,expected",
     [
-        ("Bad Return Type", BadReturnType, ValidationError,{"path": "test/path","id": 1}, "I should be None"),
+        (
+            "Bad Return Type",
+            BadReturnType,
+            ValidationError,
+            {"path": "test/path", "id": 1},
+            "I should be None",
+        ),
         # (rules.ViewsMustHavePrimaryKeys, "test_view_no_pk.view.lkml", False),
-        
     ],
 )
-def test_runtime_errors(name: str ,test_class: Any ,expected_error: BaseException, kwargs: Dict,expected: Any) -> None:
+def test_runtime_errors(
+    name: str,
+    test_class: Any,
+    expected_error: BaseException,
+    kwargs: Dict,
+    expected: Any,
+) -> None:
 
     actual: Optional[Any] = None
     if expected_error:
@@ -104,16 +108,11 @@ def test_runtime_errors(name: str ,test_class: Any ,expected_error: BaseExceptio
             tc = test_class()
             actual = tc.run(**kwargs)
             assert expected == actual
-            
+
     else:
         tc = test_class()
         actual = tc.run(**kwargs)
         assert expected == actual
-
-   
-    
-
-
 
 
 # @pytest.mark.parametrize(
@@ -121,7 +120,7 @@ def test_runtime_errors(name: str ,test_class: Any ,expected_error: BaseExceptio
 #     [
 #         (rules.ViewsMustHavePrimaryKeys, "test_model.model.lkml", True),
 #         (rules.ViewsMustHavePrimaryKeys, "test_view_no_pk.view.lkml", False),
-        
+
 #     ],
 # )
 # def test_rule_class(rule: rules.Rule, test_file: str, expected: bool) -> None:

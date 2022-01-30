@@ -356,30 +356,26 @@ def test_static_inheritance_override_method() -> None:
             def poop(self, sheesh: str, id: int) -> None:
                 print(f"{sheesh} and {id}")
 
-def test_no_abc_impplementation()->None:
-    class MyClass(metaclass=InterfaceMeta):
 
+def test_no_abc_impplementation() -> None:
+    class MyClass(metaclass=InterfaceMeta):
         def __init__(self, path: str) -> None:
             print(path)
 
         def run(self, check: bool) -> int:
             return 1
-            
 
-    m = MyClass(path='1')
+    m = MyClass(path="1")
     m.run(True)
 
     with pytest.raises(ValidationError):
-        class BadClass(metaclass=InterfaceMeta):
 
+        class BadClass(metaclass=InterfaceMeta):
             def __init__(self, path: int) -> None:
                 print(path)
 
             def run(self, check: bool) -> int:
                 return "hellp"
-                
-                
-        
+
         b = BadClass(1)
         b.run(False)
-

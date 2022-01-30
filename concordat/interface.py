@@ -53,7 +53,7 @@ def return_type_wrapper(fnc: Callable) -> Any:
 
     @wraps(fnc)
     def wrapping(*args, **kwargs) -> Any:  # type: ignore
-        """ Func wrapper to check return type
+        """Func wrapper to check return type
 
         Raises:
             TypeError: "Didn't provide a return type you little rascal. Now start over"
@@ -72,8 +72,6 @@ def return_type_wrapper(fnc: Callable) -> Any:
             ) from KeyError
         result = fnc(*args, **kwargs)
 
-
-
         if any([result is not None, NONE_TYPE != type(return_annotation)]):
             if not return_annotation:
                 if NONE_TYPE != type(return_annotation):
@@ -84,14 +82,16 @@ def return_type_wrapper(fnc: Callable) -> Any:
                 val = type_hints[RETURN]
                 annotation = val() if isinstance(Callable, val) else val()
             fields: Dict[str, Tuple[Any, Any]] = {}
-            fields[RETURN] = annotation
+            fields[RETURN] = annotation  # type: ignore
             # import pdb
             # pdb.set_trace()
 
             # model = create_model(
             #     "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
             # )
-            model = create_model("ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields)
+            model = create_model(
+                "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
+            )
 
             model.parse_obj({RETURN: result})
 
