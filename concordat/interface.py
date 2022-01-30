@@ -74,7 +74,7 @@ def return_type_wrapper(fnc: Callable) -> Any:
 
 
 
-        if any([result is not None, NONE_TYPE != type(return_annotation)]):            
+        if any([result is not None, NONE_TYPE != type(return_annotation)]):
             if not return_annotation:
                 if NONE_TYPE != type(return_annotation):
                     annotation = None
