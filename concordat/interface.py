@@ -6,8 +6,12 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, get_type_hints
 from inspect import signature
 
-from pydantic import BaseModel, create_model, validate_arguments # pylint: disable=no-name-in-module
-from pydantic.typing import get_all_type_hints # pylint: disable=no-name-in-module
+from pydantic import (
+    BaseModel,
+    create_model,
+    validate_arguments,
+)  # pylint: disable=no-name-in-module
+from pydantic.typing import get_all_type_hints  # pylint: disable=no-name-in-module
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -16,7 +20,7 @@ IS_ABSTRACT = "__isabstract__"
 NONE_TYPE = type(None)  # pylint: disable=invalid-name
 
 
-class ReturnValue(BaseModel): # pylint: disable=too-few-public-methods
+class ReturnValue(BaseModel):  # pylint: disable=too-few-public-methods
     """Base class for validating the return
         type annoation in real time
 
