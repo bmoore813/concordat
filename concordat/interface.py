@@ -9,9 +9,9 @@ from inspect import signature
 from pydantic import (  # type: ignore  # pylint: disable=no-name-in-module
     BaseModel,
     create_model,
-    validate_arguments,
 )
 from pydantic.typing import get_all_type_hints  # type: ignore  # pylint: disable=no-name-in-module
+from beartype import beartype
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -218,22 +218,13 @@ class InterfaceMeta(type):
         namespace[ALL_METHODS] = InterfaceMeta._get_all_methods(namespace)
         for attribute_name, attribute in namespace.items():
             if isinstance(attribute, Callable):  # type: ignore
-                attribute = return_type_wrapper(
-                    validate_arguments(
-                        func=attribute, config=dict(arbitrary_types_allowed=True)
-                    )
-                )
+                attribute = return_type_wrapper(beartype(attribute))
             if isinstance(attribute, staticmethod):
                 # Here we decouple the static method from the function
                 # and wedge the validate_arguments between the staticmethod
                 # wrapper and go on our merry way baby
                 attribute = staticmethod(
-                    return_type_wrapper(
-                        validate_arguments(  # type: ignore
-                            func=attribute.__func__,
-                            config=dict(arbitrary_types_allowed=True),
-                        )
-                    )
+                    return_type_wrapper(beartype(attribute.__func__))
                 )
                 # attribute = staticmethod(type_enforcer(attribute.__func__))
             namespace[attribute_name] = attribute

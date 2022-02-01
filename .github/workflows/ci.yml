@@ -26,5 +26,5 @@ jobs:
     - name: Ensure MyPy passes
       run: mypy concordat/interface.py
     - name: Run Pytest
-      run: pytest concordat/
+      run: pytest concordat/interface_test.py
 

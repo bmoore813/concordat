@@ -1,6 +1,6 @@
 test:
 	docker build --tag concordat:latest .
-	docker run concordat:latest pytest /concordat
+	docker run concordat:latest pytest /concordat/interface_test.py
 
 purge-branches:
 	git branch | grep -v "main" | xargs git branch -D
