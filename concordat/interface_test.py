@@ -1,7 +1,10 @@
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import pytest
-from pydantic import ValidationError
+from beartype.roar import (
+    BeartypeCallHintPepReturnException,
+    BeartypeCallHintPepParamException,
+)
 
 from concordat.interface import InterfaceMeta, abstract_method
 
@@ -81,7 +84,7 @@ def test_build_wrong_type_hints() -> None:
 
 # # TestRuntimeErrors:
 def test_run_wrong_arg_types() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepParamException):
         v = Valid()
         v.run("test/path", "not an int")  # type:ignore
 
@@ -93,7 +96,7 @@ def test_no_errors() -> None:
 
 
 def test_bad_return_type() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepReturnException):
 
         class IZeus(metaclass=InterfaceMeta):
             @abstract_method
@@ -133,7 +136,7 @@ def test_custom_return_type() -> None:
 
     z = Zeus()
     z.run()
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepReturnException):
 
         class Zeus(IZeus):
             def run(self) -> CustomType:
@@ -187,10 +190,10 @@ def test_inheritance_enhancement() -> None:
     enhance.read("considerthisread")
     enhance.new_func("path", 900, "extrasauceplz")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepParamException):
         enhance.run("test", "not an int")  # type:ignore
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(TypeError):
         enhance.read("read", "extra arg")  # type:ignore
 
 
@@ -280,7 +283,7 @@ def test_static_build_wrong_type_hints() -> None:
 
 # TestRuntimeErrors:
 def test_static_run_wrong_arg_types() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepParamException):
         v = Static()
         v.poop("test/path", "not an int")  # type:ignore
 
@@ -292,7 +295,7 @@ def test_static_no_errors() -> None:
 
 
 def test_bad_return_type() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepReturnException):
 
         class IZeus(metaclass=InterfaceMeta):
             @abstract_method
@@ -342,10 +345,10 @@ def test_static_inheritance_enhancement() -> None:
     enhance.pee("considerthisread")
     enhance.new_func("path", 900, "extrasauceplz")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepParamException):
         enhance.poop("test", "not an int")  # type:ignore
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(TypeError):
         enhance.pee("read", "extra arg")  # type:ignore
 
 
@@ -368,7 +371,7 @@ def test_no_abc_impplementation() -> None:
     m = MyClass(path="1")
     m.run(True)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(BeartypeCallHintPepReturnException):
 
         class BadClass(metaclass=InterfaceMeta):
             def __init__(self, path: int) -> None:
