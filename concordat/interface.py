@@ -12,6 +12,7 @@ from pydantic import (  # type: ignore  # pylint: disable=no-name-in-module
 )
 from pydantic.typing import get_all_type_hints  # type: ignore  # pylint: disable=no-name-in-module
 from beartype import beartype
+from pytest import raises
 
 MRO_JUMP = 2
 ALL_METHODS = "all_methods"
@@ -122,8 +123,12 @@ def abstract_method(func: Callable) -> Callable:
     Returns:
         Callable: The original fuction is returned with __isabstract__ = True
     """
-    setattr(func, IS_ABSTRACT, True)
-    return func
+    if isinstance(func, Callable):
+        setattr(func, IS_ABSTRACT, True)
+        return func
+    else:
+        raise TypeError(f"You dog, gimme a callable {type(func)}")
+    
 
 
 class InterfaceMeta(type):
