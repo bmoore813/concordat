@@ -83,8 +83,6 @@ def return_type_wrapper(fnc: Callable) -> Any:
                 annotation = val() if isinstance(Callable, val) else val()
             fields: Dict[str, Tuple[Any, Any]] = {}
             fields[RETURN] = annotation  # type: ignore
-            # import pdb
-            # pdb.set_trace()
 
             # model = create_model(
             #     "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
