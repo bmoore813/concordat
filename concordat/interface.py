@@ -123,11 +123,10 @@ def abstract_method(func: Callable) -> Callable:
     Returns:
         Callable: The original fuction is returned with __isabstract__ = True
     """
-    if isinstance(func, Callable):
-        setattr(func, IS_ABSTRACT, True)
-        return func
-    else:
-        raise TypeError(f"You dog, gimme a callable {type(func)}")
+    
+    setattr(func, IS_ABSTRACT, True)
+    return func
+    
     
 
 
