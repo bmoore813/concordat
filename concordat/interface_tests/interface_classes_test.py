@@ -115,25 +115,3 @@ def test_runtime_errors(
         assert expected == actual
 
 
-# @pytest.mark.parametrize(
-#     "rule,test_file,expected",
-#     [
-#         (rules.ViewsMustHavePrimaryKeys, "test_model.model.lkml", True),
-#         (rules.ViewsMustHavePrimaryKeys, "test_view_no_pk.view.lkml", False),
-
-#     ],
-# )
-# def test_rule_class(rule: rules.Rule, test_file: str, expected: bool) -> None:
-#     """This test is used to make sure that
-#         makes sure our rules are working
-#         as we would expect them to with our fixture data
-#     Args:
-#         rule (rules.Rule): rule to be tested
-#         test_file (str): test .lkml file
-#         expected (bool): the desired pass/fail state
-#     """
-#     lookml, full_path = read_test_file(test_file)
-#     r = rule(lookml=lookml, file_path=full_path)
-#     actual = r.run()
-
-#     assert actual == expected
