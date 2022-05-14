@@ -84,9 +84,6 @@ def return_type_wrapper(fnc: Callable) -> Any:
             fields: Dict[str, Tuple[Any, Any]] = {}
             fields[RETURN] = annotation  # type: ignore
 
-            # model = create_model(
-            #     "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
-            # )
             model = create_model(
                 "ValidateReturnTypeAnnotation", __base__=ReturnValue, **fields  # type: ignore
             )
