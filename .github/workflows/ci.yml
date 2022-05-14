@@ -21,8 +21,8 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint concordat/interface.py
-    - name: Analysing the code with black
-      run: black --check concordat/
+    # - name: Analysing the code with black
+    #   run: black --check concordat/
     - name: Ensure MyPy passes
       run: mypy concordat/interface.py
     - name: Run Pytest
